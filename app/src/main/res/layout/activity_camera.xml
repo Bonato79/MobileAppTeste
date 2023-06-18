@@ -17,8 +17,8 @@
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
-        <ImageView
-            android:id="@+id/second_half_imageview"
+        <SurfaceView
+            android:id="@+id/second_half_surfaceview"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />

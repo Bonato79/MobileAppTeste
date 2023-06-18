@@ -15,7 +15,6 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.WindowManager;
-import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,7 +32,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
     private CameraCaptureSession cameraCaptureSession;
     private CaptureRequest.Builder previewRequestBuilder;
     private SurfaceView firstHalfSurfaceView;
-    private ImageView secondHalfImageView;
+    private SurfaceView secondHalfSurfaceView;
     private SurfaceHolder holder;
 
     @Override
@@ -42,7 +41,7 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
         setContentView(R.layout.activity_camera);
 
         firstHalfSurfaceView = findViewById(R.id.first_half_surfaceview);
-        secondHalfImageView = findViewById(R.id.second_half_imageview);
+        secondHalfSurfaceView = findViewById(R.id.second_half_surfaceview);
 
         firstHalfSurfaceView.getHolder().addCallback(this);
 
@@ -88,15 +87,16 @@ public class CameraActivity extends AppCompatActivity implements SurfaceHolder.C
 
     private void startCameraPreview() {
         try {
-            SurfaceHolder surfaceHolder = firstHalfSurfaceView.getHolder();
-            Surface previewSurface = surfaceHolder.getSurface();
+            SurfaceHolder firstHalfSurfaceHolder = firstHalfSurfaceView.getHolder();
+            Surface firstHalfSurface = firstHalfSurfaceHolder.getSurface();
+            SurfaceHolder secondHalfSurfaceHolder = secondHalfSurfaceView.getHolder();
+            Surface secondHalfSurface = secondHalfSurfaceHolder.getSurface();
+
             previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-            previewRequestBuilder.addTarget(previewSurface);
+            previewRequestBuilder.addTarget(firstHalfSurface);
+            previewRequestBuilder.addTarget(secondHalfSurface);
 
-            // Espelhar a visualização da câmera
-            previewRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation(CameraActivity.this, CameraCharacteristics.LENS_FACING_BACK));
-
-            cameraDevice.createCaptureSession(Arrays.asList(previewSurface),
+            cameraDevice.createCaptureSession(Arrays.asList(firstHalfSurface, secondHalfSurface),
                     new CameraCaptureSession.StateCallback() {
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
