@@ -1,16 +1,26 @@
 package desenvolvimento.app.mobileappteste;
 
 import android.app.Activity;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-public class CameraActivity extends Activity {
+public class CameraActivity extends Activity implements SensorEventListener {
 
     private WebView webView;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+
+    private static final int THRESHOLD = 5; // Limiar de movimento para ativar a simulação de teclas
+    private boolean isMovingForward, isMovingBackward, isMovingLeft, isMovingRight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,22 +47,15 @@ public class CameraActivity extends Activity {
         webSettings.setJavaScriptEnabled(true); // Ativar suporte a JavaScript, se necessário
         webSettings.setDomStorageEnabled(true); // Ativar armazenamento DOM, se necessário
 
-        // Configurar o agente do usuário para um dispositivo móvel
-        String userAgent = "Mozilla/5.0 (Linux; Android 10; SM-G975F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.210 Mobile Safari/537.36";
-        webSettings.setUserAgentString(userAgent);
-
         // Carregar uma URL específica
         webView.loadUrl("https://sketchfab.com/models/faf4babdcda04c3aa95192736503802e/embed?autostart=1&cardboard=1&internal=1&tracking=0&ui_infos=0&ui_snapshots=1&ui_stop=0&ui_theatre=1&ui_watermark=0");
 
         // Configurar o WebView como conteúdo da atividade
         setContentView(webView);
-    }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-        webView.onPause();
-        webView.pauseTimers();
+        // Inicializar o sensor de acelerômetro
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
     }
 
     @Override
@@ -60,6 +63,19 @@ public class CameraActivity extends Activity {
         super.onResume();
         webView.onResume();
         webView.resumeTimers();
+
+        // Registrar o listener do sensor de acelerômetro
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        webView.onPause();
+        webView.pauseTimers();
+
+        // Remover o listener do sensor de acelerômetro
+        sensorManager.unregisterListener(this);
     }
 
     @Override
@@ -72,5 +88,78 @@ public class CameraActivity extends Activity {
             webView.removeAllViews();
             webView.destroy();
         }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        float x = event.values[0];
+        float y = event.values[1];
+        float z = event.values[2];
+
+        // Detectar movimento para frente e trás
+        if (Math.abs(x) > THRESHOLD) {
+            if (x > 0) {
+                if (!isMovingForward) {
+                    simulateKeyPress(KeyEvent.KEYCODE_DPAD_UP, true);
+                    isMovingForward = true;
+                }
+            } else {
+                if (!isMovingBackward) {
+                    simulateKeyPress(KeyEvent.KEYCODE_DPAD_DOWN, true);
+                    isMovingBackward = true;
+                }
+            }
+        } else {
+            if (isMovingForward) {
+                simulateKeyPress(KeyEvent.KEYCODE_DPAD_UP, false);
+                isMovingForward = false;
+            }
+            if (isMovingBackward) {
+                simulateKeyPress(KeyEvent.KEYCODE_DPAD_DOWN, false);
+                isMovingBackward = false;
+            }
+        }
+
+        // Detectar movimento para esquerda e direita
+        if (Math.abs(y) > THRESHOLD) {
+            if (y > 0) {
+                if (!isMovingRight) {
+                    simulateKeyPress(KeyEvent.KEYCODE_DPAD_RIGHT, true);
+                    isMovingRight = true;
+                }
+            } else {
+                if (!isMovingLeft) {
+                    simulateKeyPress(KeyEvent.KEYCODE_DPAD_LEFT, true);
+                    isMovingLeft = true;
+                }
+            }
+        } else {
+            if (isMovingRight) {
+                simulateKeyPress(KeyEvent.KEYCODE_DPAD_RIGHT, false);
+                isMovingRight = false;
+            }
+            if (isMovingLeft) {
+                simulateKeyPress(KeyEvent.KEYCODE_DPAD_LEFT, false);
+                isMovingLeft = false;
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        // Não é necessário implementar esse método para este caso
+    }
+
+    private void simulateKeyPress(int keyCode, boolean isKeyDown) {
+        int action = isKeyDown ? KeyEvent.ACTION_DOWN : KeyEvent.ACTION_UP;
+        long now = System.currentTimeMillis();
+        KeyEvent keyEvent = new KeyEvent(now, now, action, keyCode, 0);
+        dispatchKeyEvent(keyEvent);
+    }
+
+    public boolean dispatchKeyEvent(KeyEvent keyEvent) {
+        // Simular o pressionamento de tecla no WebView
+        webView.dispatchKeyEvent(keyEvent);
+        return false;
     }
 }
