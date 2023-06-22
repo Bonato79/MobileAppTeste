@@ -6,23 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".CameraActivity">
 
-    <LinearLayout
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal">
 
-        <SurfaceView
-            android:id="@+id/first_half_surfaceview"
+        <WebView
+            android:id="@+id/webview1"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
-        <SurfaceView
-            android:id="@+id/second_half_surfaceview"
+        <WebView
+            android:id="@+id/webview2"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1" />
 
     </LinearLayout>
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
